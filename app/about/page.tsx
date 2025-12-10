@@ -8,7 +8,7 @@ function AboutPage() {
                 </span>
             </h1>
             <p className='mt-6 text-lg tracking-wide leading-8 max-w-2xl mx-auto text-muted-foreground'>
-                Welcome to Our Store, your ultimate destination for stylish and affordable home essentials. We&apos;re passionate about helping you create a cozy and inviting space, offering a curated selection of high-quality products from furniture to decor. Discover comfort and style, delivered right to your door.
+                Welcome to Our Store, your ultimate destination for stylish and affordable home essentials. We are passionate about helping you create a cozy and inviting space, offering a curated selection of high-quality products from furniture to decor. Discover comfort and style, delivered right to your door.
 
             </p>
         </section>
