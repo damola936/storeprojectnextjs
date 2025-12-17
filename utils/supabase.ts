@@ -7,10 +7,16 @@ export const supabase = createClient(
     process.env.SUPABASE_KEY as string
 )
 
-export const uploadImage = async (image: File) => {
+export const uploadImageToBucket = async (image: File) => {
     const timeStamp = Date.now()
     const newName = `${timeStamp}-${image.name}`
     const {data} = await supabase.storage.from(bucket).upload(newName, image, {cacheControl: "3600"})
     if(!data) throw new Error("Could not upload image")
     return supabase.storage.from(bucket).getPublicUrl(newName).data.publicUrl
+}
+
+export const deleteImageFromBucket = (url: string) => {
+    const imageName = url.split("/")[-1]
+    if(!imageName) throw new Error("Invalid Image URL")
+    return supabase.storage.from(bucket).remove([imageName])
 }

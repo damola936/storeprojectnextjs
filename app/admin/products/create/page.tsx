@@ -6,7 +6,7 @@ import FormContainer from "@/components/Form/FormContainer"
 import { createProductAction } from "@/utils/actions"
 import ImageInput from "@/components/Form/ImageInput"
 import CheckboxInput from "@/components/Form/CheckboxInput"
-import FormSubmitButton from "@/components/Form/FormSubmitButton"
+import {SubmitButton} from "@/components/Form/Buttons"
 
 
 function CreateProductPage() {
@@ -29,7 +29,7 @@ function CreateProductPage() {
                     <div className="mt-6">
                         <CheckboxInput name="featured" label="featured" />
                     </div>
-                    <FormSubmitButton text="Create Product" className="mt-8" />
+                    <SubmitButton text="Create Product" className="mt-8" />
                 </FormContainer>
             </div>
         </section>
