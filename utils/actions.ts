@@ -157,5 +157,86 @@ export const updateProductAction = async (prevState: any, formData: FormData) =>
 }
 
 export const updateProductImageAction = async (prevState: any, formData: FormData) => {
-    return {message: "Product Image updated successfully."}
+    const productID = formData.get("id") as string
+    const image = formData.get("image") as File
+    const oldImageUrl = formData.get("oldUrl") as string
+    await getAdminUser()
+    try {
+        const validatedImage = validateWithZodSchema(imageSchema, {image: image})
+        const newUploadedImagePath = await uploadImageToBucket(validatedImage.image)
+        await deleteImageFromBucket(oldImageUrl)
+        await db.product.update({
+            where: {
+                id: productID
+            },
+            data: {
+                image: newUploadedImagePath
+            }
+        })
+        revalidatePath(`/admin/products/${productID}/edit`)
+        return {message: "Product Image updated successfully."}
+    } catch (error) {
+        return renderError(error)
+    }
+
+}
+
+export const fetchFavouriteId = async ({productID}: { productID: string }) => {
+    const user = await getAuthUser()
+    const favourite = await db.favourite.findFirst({
+        where: {
+            productId: productID,
+            clerkId: user.id
+        },
+        select: {id: true}
+    })
+    return favourite?.id || null
+}
+
+export const toggleFavouriteAction = async (prevState: {
+    productID: string,
+    favouriteID: string | null,
+    pathname: string
+}) => {
+    const {productID, favouriteID, pathname} = prevState
+    const user = await getAuthUser()
+    if (!favouriteID) {
+        try {
+            await db.favourite.create({
+                data: {
+                    clerkId: user.id,
+                    productId: productID
+                }
+            })
+            revalidatePath(pathname)
+            return {message: "Product Added to Favourites"}
+        } catch (error) {
+            return renderError(error)
+        }
+    } else {
+        try {
+            await db.favourite.delete({
+                where: {
+                    id: favouriteID
+                }
+            })
+            revalidatePath(pathname)
+            return {message: "Product Removed from Favourites"}
+        } catch (error) {
+            return renderError(error)
+        }
+    }
+}
+
+export const fetchUserFavourites = async () => {
+    const user = await getAuthUser()
+    const favourites = await db.favourite.findMany({
+        where: {
+            clerkId: user.id
+        },
+        include: {
+            product: true
+        }
+    })
+    return favourites
 }
