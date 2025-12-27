@@ -304,7 +304,8 @@ export const deleteReviewAction = async ({ reviewID }: { reviewID: string }) => 
 }
 
 export const findExistingReview = async (productId: string) => {
-    const user = await getAuthUser()
+    const user = await currentUser()
+    if (!user) return null
     const existingReview = await db.review.findFirst({
         where: {
             productId: productId,
