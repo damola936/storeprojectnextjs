@@ -6,8 +6,8 @@ const isAuthRoute = createRouteMatcher(["/admin(.*)"])
 
 export default clerkMiddleware((auth, req) => {
   const isAdminUser = auth().userId === process.env.ADMIN_USER_ID;
-  if(isAuthRoute(req) && !isAdminUser) return NextResponse.redirect(new URL('/', req.url))
-  if(!isPublicRoute(req)) auth().protect();
+  if (isAuthRoute(req) && !isAdminUser) return NextResponse.redirect(new URL('/', req.url))
+  if (!isPublicRoute(req)) auth().protect();
 });
 
 export const config = {

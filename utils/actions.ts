@@ -1,10 +1,10 @@
 "use server"
 import db from "./db";
-import {redirect} from "next/navigation";
-import {currentUser} from "@clerk/nextjs/server";
-import {imageSchema, productSchema, validateWithZodSchema} from "@/utils/schemas";
-import {deleteImageFromBucket, uploadImageToBucket} from "@/utils/supabase";
-import {revalidatePath} from 'next/cache'
+import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
+import { imageSchema, productSchema, reviewSchema, validateWithZodSchema } from "@/utils/schemas";
+import { deleteImageFromBucket, uploadImageToBucket } from "@/utils/supabase";
+import { revalidatePath } from 'next/cache'
 
 
 const getAuthUser = async () => {
@@ -21,7 +21,7 @@ const getAdminUser = async () => {
 
 const renderError = (error: unknown): { message: string } => {
     console.log(error)
-    return {message: error instanceof Error ? error.message : "Error occurred."}
+    return { message: error instanceof Error ? error.message : "Error occurred." }
 }
 
 export const fetchFeaturedProducts = async () => {
@@ -33,7 +33,7 @@ export const fetchFeaturedProducts = async () => {
     return products
 }
 
-export const fetchAllProducts = async ({search}: { search: string }) => {
+export const fetchAllProducts = async ({ search }: { search: string }) => {
     const products = await db.product.findMany({
         where: {
             OR: [
@@ -77,7 +77,7 @@ export const createProductAction = async (prevState: any, formData: FormData): P
         const rawData = Object.fromEntries(formData)
         const file = formData.get("image") as File
         const validatedFields = validateWithZodSchema(productSchema, rawData)
-        const validatedImage = validateWithZodSchema(imageSchema, {image: file})
+        const validatedImage = validateWithZodSchema(imageSchema, { image: file })
         const fullImagePath = await uploadImageToBucket(validatedImage.image)
 
         await db.product.create({
@@ -104,7 +104,7 @@ export const fetchAdminProducts = async () => {
 }
 
 export const deleteProductAction = async (prevState: { productID: string }) => {
-    const {productID} = prevState
+    const { productID } = prevState
     await getAdminUser()
     try {
         const deletedProduct = await db.product.delete({
@@ -114,7 +114,7 @@ export const deleteProductAction = async (prevState: { productID: string }) => {
         })
         await deleteImageFromBucket(deletedProduct.image)
         revalidatePath("/admin/products")
-        return {message: "Successfully deleted product"};
+        return { message: "Successfully deleted product" };
     } catch (error) {
         return renderError(error)
     }
@@ -150,7 +150,7 @@ export const updateProductAction = async (prevState: any, formData: FormData) =>
             }
         })
         revalidatePath(`/admin/products/${productID}/edit`)
-        return {message: "Successfully updated product"};
+        return { message: "Successfully updated product" };
     } catch (error) {
         return renderError(error)
     }
@@ -162,7 +162,7 @@ export const updateProductImageAction = async (prevState: any, formData: FormDat
     const oldImageUrl = formData.get("oldUrl") as string
     await getAdminUser()
     try {
-        const validatedImage = validateWithZodSchema(imageSchema, {image: image})
+        const validatedImage = validateWithZodSchema(imageSchema, { image: image })
         const newUploadedImagePath = await uploadImageToBucket(validatedImage.image)
         await deleteImageFromBucket(oldImageUrl)
         await db.product.update({
@@ -174,21 +174,21 @@ export const updateProductImageAction = async (prevState: any, formData: FormDat
             }
         })
         revalidatePath(`/admin/products/${productID}/edit`)
-        return {message: "Product Image updated successfully."}
+        return { message: "Product Image updated successfully." }
     } catch (error) {
         return renderError(error)
     }
 
 }
 
-export const fetchFavouriteId = async ({productID}: { productID: string }) => {
+export const fetchFavouriteId = async ({ productID }: { productID: string }) => {
     const user = await getAuthUser()
     const favourite = await db.favourite.findFirst({
         where: {
             productId: productID,
             clerkId: user.id
         },
-        select: {id: true}
+        select: { id: true }
     })
     return favourite?.id || null
 }
@@ -198,7 +198,7 @@ export const toggleFavouriteAction = async (prevState: {
     favouriteID: string | null,
     pathname: string
 }) => {
-    const {productID, favouriteID, pathname} = prevState
+    const { productID, favouriteID, pathname } = prevState
     const user = await getAuthUser()
     if (!favouriteID) {
         try {
@@ -209,7 +209,7 @@ export const toggleFavouriteAction = async (prevState: {
                 }
             })
             revalidatePath(pathname)
-            return {message: "Product Added to Favourites"}
+            return { message: "Product Added to Favourites" }
         } catch (error) {
             return renderError(error)
         }
@@ -221,7 +221,7 @@ export const toggleFavouriteAction = async (prevState: {
                 }
             })
             revalidatePath(pathname)
-            return {message: "Product Removed from Favourites"}
+            return { message: "Product Removed from Favourites" }
         } catch (error) {
             return renderError(error)
         }
@@ -239,4 +239,90 @@ export const fetchUserFavourites = async () => {
         }
     })
     return favourites
+}
+
+export const createReviewAction = async (prevState: any, formData: FormData) => {
+    const user = await getAuthUser()
+    try {
+        const rawData = Object.fromEntries(formData)
+        const validatedFields = validateWithZodSchema(reviewSchema, rawData)
+        const existingReview = await findExistingReview(validatedFields.productId)
+        if (existingReview) {
+            return { message: "You have already reviewed this product" }
+        }
+        await db.review.create({
+            data: {
+                ...validatedFields,
+                clerkId: user.id
+            }
+        })
+        revalidatePath(`/products/${validatedFields.productId}`)
+        return { message: "Review created successfully." }
+    } catch (error) {
+        return renderError(error)
+    }
+}
+
+export const fetchProductReviews = async (productId: string) => {
+    const reviews = await db.review.findMany({
+        where: {
+            productId: productId
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
+    return reviews
+}
+
+export const fetchProductReviewByUser = async (userId: string) => {
+    await getAuthUser()
+    const reviews = await db.review.findMany({
+        where: {
+            clerkId: userId
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
+    return reviews
+}
+
+export const deleteReviewAction = async ({ reviewID }: { reviewID: string }) => {
+    await getAuthUser()
+    try {
+        await db.review.delete({
+            where: {
+                id: reviewID
+            }
+        })
+        revalidatePath("/reviews")
+        return { message: "Review deleted successfully." }
+    } catch (error) {
+        return renderError(error)
+    }
+}
+
+export const findExistingReview = async (productId: string) => {
+    const user = await getAuthUser()
+    const existingReview = await db.review.findFirst({
+        where: {
+            productId: productId,
+            clerkId: user.id
+        }
+    })
+    return existingReview
+}
+
+export const fetchProductRating = async (productId: string) => {
+    const ratings = await db.review.findMany({
+        where: {
+            productId: productId
+        },
+        select: {
+            rating: true
+        }
+    })
+    const averageRatings = ratings.length > 0 ? ratings.reduce((acc, review) => acc + review.rating, 0) / ratings.length : 0
+    return { ratings, averageRatings }
 }

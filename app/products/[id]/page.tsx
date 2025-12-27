@@ -1,13 +1,17 @@
 import BreadCrumbs from '@/components/SingleProduct/BreadCrumbs';
-import { fetchSingleProduct } from '@/utils/actions';
+import { fetchSingleProduct, findExistingReview } from '@/utils/actions';
 import Image from 'next/image';
 import { formatCurrency } from '@/utils/format';
 import FavouriteToggleButton from '@/components/Products/FavouriteToggleButton';
 import AddToCart from '@/components/SingleProduct/AddToCart';
 import ProductRating from '@/components/SingleProduct/ProductRating';
+import ShareButton from "@/components/SingleProduct/ShareButton";
+import SubmitReviews from '@/components/Reviews/SubmitReviews';
+import ProductReviews from '@/components/Reviews/ProductReviews';
 
 async function SingleProductPage({ params }: { params: { id: string } }) {
     const product = await fetchSingleProduct(params.id)
+    const existingReview = await findExistingReview(params.id)
     const { name, image, company, description, price } = product
     const dollarsAmount = formatCurrency(price)
     return (
@@ -29,7 +33,11 @@ async function SingleProductPage({ params }: { params: { id: string } }) {
                 <div>
                     <div className='flex gap-x-8 items-center'>
                         <h1 className='capitalize text-3xl font-bold'>{name}</h1>
-                        <FavouriteToggleButton productID={params.id} />
+                        <div className={"flex items-center gap-x-2"}>
+                            <FavouriteToggleButton productID={params.id} />
+                            <ShareButton productID={params.id} name={name} />
+                        </div>
+
                     </div>
                     <ProductRating productID={params.id} />
                     <h4 className='text-xl mt-2'>{company}</h4>
@@ -40,6 +48,8 @@ async function SingleProductPage({ params }: { params: { id: string } }) {
                     <AddToCart productID={params.id} />
                 </div>
             </div>
+            <ProductReviews productID={params.id} />
+            {!existingReview && <SubmitReviews productID={params.id} />}
         </section>
     )
 }
