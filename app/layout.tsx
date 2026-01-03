@@ -10,6 +10,9 @@ import { ClerkProvider } from "@clerk/nextjs"
 export const metadata: Metadata = {
   title: 'Next Storefront',
   description: 'A nifty store built with Next.js',
+  icons: {
+    icon: '/storeicon.ico',
+  },
 };
 
 export default function RootLayout({

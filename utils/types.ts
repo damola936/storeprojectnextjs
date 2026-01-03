@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export interface CartItem {
     productID: string;
     image: string;
@@ -11,9 +13,13 @@ export interface CartState {
     cartItems: CartItem[]
     numItemsInCart: number
     cartTotal: number
-    shipping:number
+    shipping: number
     tax: number
     orderTotal: number
 }
 
-export type actionFunction = (prevState: any, formData: FormData) => Promise<{message: string}>
+export type actionFunction = (prevState: any, formData: FormData) => Promise<{ message: string }>
+
+export type CartItemWithProduct = Prisma.CartItemGetPayload<{
+    include: { product: true };
+}>;
