@@ -7,9 +7,8 @@ function CartItemsList({ cartItems }: { cartItems: CartItemWithProduct[] }) {
     return (
         <div>
             {cartItems.map((cartItem) => (
-                <Card className="mb-8 p-4">
+                <Card className="mb-8 p-4" key={cartItem.id}>
                     <CartItemColumns
-                        key={cartItem.id}
                         name={cartItem.product.name}
                         image={cartItem.product.image}
                         company={cartItem.product.company}
