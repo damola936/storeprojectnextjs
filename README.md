@@ -33,7 +33,7 @@ A modern, high-performance E-commerce storefront built with **Next.js 14**, **Ty
 git clone <your-repo-url>
 cd nextjs-store-project
 ```
-````
+
 
 ### 2. Install Dependencies
 
