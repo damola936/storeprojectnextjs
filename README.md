@@ -1,5 +1,5 @@
-````markdown
-# Next.js Full-Stack Store Project
+
+ # Next.js Full-Stack Store Project
 
 A modern, high-performance E-commerce storefront built with **Next.js 14**, **TypeScript**, and **Tailwind CSS**. This project features a complete shopping flow from product discovery to secure checkout.
 
